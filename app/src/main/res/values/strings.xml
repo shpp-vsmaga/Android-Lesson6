@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Notification Service</string>
+    <string name="btnStartServiceLabel">Start Service</string>
+    <string name="btnStopServiceLabel">Stop Service</string>
+    <string name="edtNotificatonHint">Type notification...</string>
+    <string name="btnNotifTestLabel">Notification Test</string>
+    <string name="TimeToDrinkTea">Time to drink tea</string>
+    <string name="btnChangeTextLabel">Change notification</string>
+</resources>
