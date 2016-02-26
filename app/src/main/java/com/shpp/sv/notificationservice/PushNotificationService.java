@@ -7,9 +7,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.text.TextUtils;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,7 +18,8 @@ public class PushNotificationService extends Service {
     private final IBinder binder = new ServiceBinder();
     private static String LOG_TAG = "svcom";
     private static long MINUTE_IN_MILISEC = 60000;
-    private int interval = 1;
+    private int id = 1;
+    private int interval = MainActivity.DEFAULT_INTERVAL;
     private Timer timer;
     private TimerTask timerTask;
 
@@ -28,9 +28,6 @@ public class PushNotificationService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-
-        //Toast.makeText(this, "Service onBind()", Toast.LENGTH_LONG).show();
         log();
         return binder;
 
@@ -38,19 +35,25 @@ public class PushNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-//        notification = intent.getStringExtra(MainActivity.NOTIF_TEXT);
-//        if (TextUtils.isEmpty(notification)){
-//            notification = getString(R.string.TimeToDrinkTea);
-//        }
-        //sendNotification(notification);
-        scheduleNotification(getString(R.string.TimeToDrinkTea));
         log();
+        notification = getString(R.string.TimeToDrinkTea);
+        if (intent != null) {
+            String receivedNotif = intent.getStringExtra(MainActivity.NOTIF_TEXT);
+            int receivedInterval = intent.getIntExtra(MainActivity.NOTIF_INTERVAL, MainActivity.DEFAULT_INTERVAL);
+            if (receivedNotif != null && receivedInterval != 0) {
+                notification = receivedNotif;
+                interval = receivedInterval;
+            }
+        }
+        scheduleNotification(notification, interval);
+
         return START_STICKY;
     }
-    public void scheduleNotification(final String text){
+
+    public void scheduleNotification(final String text, final int receivedInterval){
         notification = text;
-        if (timerTask!= null){
+        interval = receivedInterval;
+        if (timerTask != null){
             timerTask.cancel();
         }
 
@@ -60,19 +63,25 @@ public class PushNotificationService extends Service {
                 sendNotification(text);
             }
         };
-        //timer.schedule(timerTask, interval * MINUTE_IN_MILISEC, interval * MINUTE_IN_MILISEC);
-        timer.schedule(timerTask, 10000, 10000);
+        timer.schedule(timerTask, interval * MINUTE_IN_MILISEC, interval * MINUTE_IN_MILISEC);
+        //timer.schedule(timerTask, 10000, 10000);
     }
+
     public void sendNotification(String text) {
 
-        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
-        mainActivityIntent.putExtra("text", notification);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainActivityIntent, 0);
+
+        mainActivityIntent.putExtra(MainActivity.SAVED_NOTIF_TEXT, notification);
+        mainActivityIntent.putExtra(MainActivity.SAVED_INTERVAL, interval);
+        mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mainActivityIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notif = new Notification.Builder(this)
                 .setContentText(text)
+                .setContentTitle(getString(R.string.Notification))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
@@ -80,8 +89,8 @@ public class PushNotificationService extends Service {
 
         notif.defaults = Notification.DEFAULT_SOUND;
 
-        notificationManager.notify(1, notif);
-
+        NotificationManagerCompat notifManager = NotificationManagerCompat.from(this);
+        notifManager.notify(id++, notif);
 
     }
 

@@ -12,7 +12,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         context.startService(new Intent(context, PushNotificationService.class));
-        Toast.makeText(context, "Receiver started", Toast.LENGTH_LONG).show();
+        //Toast.makeText(context, "Receiver started", Toast.LENGTH_LONG).show();
     }
 
 }

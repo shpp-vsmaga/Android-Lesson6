@@ -6,8 +6,6 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,16 +13,20 @@ import com.shpp.sv.notificationservice.PushNotificationService.ServiceBinder;
 
 public class MainActivity extends AppCompatActivity {
     private static String LOG_TAG = "svcom";
-    Button btnStartService;
-    Button btnStopService;
-    Button btnChangeText;
-    EditText edtNotification;
-    PushNotificationService notifService;
-    ServiceConnection connection;
+    private Button btnStartService;
+    private Button btnStopService;
+    private Button btnChangeText;
+    private EditText edtNotification;
+    private EditText edtInterval;
+    private PushNotificationService notifService;
+    private ServiceConnection connection;
     boolean isBound = false;
     public final static String NOTIF_TEXT = "notif";
-
-    Intent serviceIntent;
+    public final static String NOTIF_INTERVAL = "inteval";
+    public final static String SAVED_NOTIF_TEXT = "savedText";
+    public final static String SAVED_INTERVAL = "savedInterval";
+    public final static int DEFAULT_INTERVAL = 30;
+    private Intent serviceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,10 +37,15 @@ public class MainActivity extends AppCompatActivity {
         serviceIntent = new Intent(this, PushNotificationService.class);
         bindNotifService();
         updateBtnState();
-        String nnn = (getIntent().getStringExtra("text"));
-        if (!TextUtils.isEmpty(nnn)) {
-            Log.d(LOG_TAG, nnn);
-        }
+
+        Intent intent = getIntent();
+            String savedText = (intent.getStringExtra(SAVED_NOTIF_TEXT));
+            int savedInterval = (intent.getIntExtra(SAVED_INTERVAL, DEFAULT_INTERVAL));
+            if (savedText != null && savedInterval != 0) {
+                edtNotification.setText(savedText);
+                edtInterval.setText(Integer.toString(savedInterval));
+            }
+
     }
 
     private void bindNotifService() {
@@ -69,17 +76,24 @@ public class MainActivity extends AppCompatActivity {
         btnStopService = (Button)findViewById(R.id.btnStopService);
         btnChangeText = (Button)findViewById(R.id.btnChangeText);
         edtNotification = (EditText)findViewById(R.id.edtNotification);
+        edtInterval = (EditText)findViewById(R.id.edtInterval);
+
+        edtNotification.setText(getString(R.string.TimeToDrinkTea));
+        edtInterval.setText(Integer.toString(DEFAULT_INTERVAL));
     }
 
     public void onClickChangeText(View view) {
         if (isBound) {
-            notifService.scheduleNotification(edtNotification.getText().toString());
+            notifService.scheduleNotification(edtNotification.getText().toString(),
+                    Integer.parseInt(String.valueOf(edtInterval.getText())));
         }
     }
 
     public void onClickStartService(View view) {
-        startService(new Intent(this, PushNotificationService.class)
-                .putExtra(NOTIF_TEXT, edtNotification.getText().toString()));
+        Intent intent = new Intent(this, PushNotificationService.class);
+        intent.putExtra(NOTIF_TEXT, edtNotification.getText().toString());
+        intent.putExtra(NOTIF_INTERVAL, Integer.parseInt(String.valueOf(edtInterval.getText())));
+        startService(intent);
         updateBtnState();
         bindNotifService();
     }

@@ -5,5 +5,9 @@
     <string name="edtNotificatonHint">Type notification...</string>
     <string name="btnNotifTestLabel">Notification Test</string>
     <string name="TimeToDrinkTea">Time to drink tea</string>
+    <string name="Notification">Notification</string>
     <string name="btnChangeTextLabel">Change notification</string>
+    <string name="tvNotilLabelText">Message:</string>
+    <string name="tvIntervalLabelText">Interval:</string>
+    <string name="edtIntervalHint">Enter interval in minutes</string>
 </resources>
